@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Construction Toolbox Checklist</title>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -15,10 +15,6 @@
       font-family: Arial, sans-serif;
       background: #eef1f5;
       color: #1f2933;
-    }
-
-    [v-cloak] {
-      display: none;
     }
 
     .app {
@@ -174,30 +170,22 @@
       overflow: hidden;
     }
 
-    .result label {
-      display: block;
-      padding: 10px 8px;
-      text-align: center;
+    .result button {
+      border-radius: 0;
       background: #f8fafc;
+      color: #1f2933;
       border-right: 1px solid #cfd7e3;
-      cursor: pointer;
+      padding: 10px 8px;
       font-size: 13px;
     }
 
-    .result label:last-child {
+    .result button:last-child {
       border-right: 0;
     }
 
-    .result label.active {
+    .result button.active {
       background: #126a5b;
       color: #ffffff;
-    }
-
-    .result input {
-      position: absolute;
-      opacity: 0;
-      width: 1px;
-      height: 1px;
     }
 
     .actions {
@@ -242,6 +230,7 @@
       color: #166344;
       border-radius: 6px;
       font-weight: bold;
+      display: none;
     }
 
     @media (max-width: 900px) {
@@ -270,16 +259,18 @@
     }
   </style>
 </head>
+
 <body>
-  <div id="app" class="app" v-cloak>
+  <div class="app">
     <div class="container">
       <header>
         <div>
           <h1>Construction Toolbox Checklist</h1>
           <p>Daily site safety inspection interface</p>
         </div>
+
         <div class="status">
-          {{ completedCount }} / {{ checklist.length }} checked
+          <span id="completedCount">0</span> / <span id="totalCount">0</span> checked
         </div>
       </header>
 
@@ -287,32 +278,32 @@
         <section class="form-grid">
           <label>
             Project Name
-            <input v-model="form.project" placeholder="Example: Tower A Construction" />
+            <input id="project" placeholder="Example: Tower A Construction" />
           </label>
 
           <label>
             Site / Location
-            <input v-model="form.site" placeholder="Example: Level 5, Block B" />
+            <input id="site" placeholder="Example: Level 5, Block B" />
           </label>
 
           <label>
             Supervisor
-            <input v-model="form.supervisor" placeholder="Supervisor name" />
+            <input id="supervisor" placeholder="Supervisor name" />
           </label>
 
           <label>
             Crew / Contractor
-            <input v-model="form.crew" placeholder="Crew or contractor name" />
+            <input id="crew" placeholder="Crew or contractor name" />
           </label>
 
           <label>
             Date
-            <input type="date" v-model="form.date" />
+            <input id="date" type="date" />
           </label>
 
           <label>
             Shift
-            <select v-model="form.shift">
+            <select id="shift">
               <option>Morning</option>
               <option>Afternoon</option>
               <option>Night</option>
@@ -322,179 +313,205 @@
 
         <section class="summary">
           <div>
-            <strong>{{ passCount }}</strong>
+            <strong id="passCount">0</strong>
             <span>Pass</span>
           </div>
+
           <div>
-            <strong>{{ failCount }}</strong>
+            <strong id="failCount">0</strong>
             <span>Fail</span>
           </div>
+
           <div>
-            <strong>{{ naCount }}</strong>
+            <strong id="naCount">0</strong>
             <span>N/A</span>
           </div>
+
           <div>
-            <strong>{{ pendingCount }}</strong>
+            <strong id="pendingCount">0</strong>
             <span>Pending</span>
           </div>
         </section>
 
         <section class="toolbar">
           <h2>Checklist Items</h2>
-          <button class="secondary" @click="markAllPass">Mark All Pass</button>
+          <button class="secondary" onclick="markAllPass()">Mark All Pass</button>
         </section>
 
-        <section class="checklist">
-          <article class="item" v-for="item in checklist" :key="item.id">
-            <div class="item-title">
-              <strong>{{ item.title }}</strong>
-              <span>{{ item.category }}</span>
-            </div>
-
-            <div class="result">
-              <label :class="{ active: item.result === 'Pass' }">
-                <input type="radio" value="Pass" v-model="item.result" />
-                Pass
-              </label>
-
-              <label :class="{ active: item.result === 'Fail' }">
-                <input type="radio" value="Fail" v-model="item.result" />
-                Fail
-              </label>
-
-              <label :class="{ active: item.result === 'N/A' }">
-                <input type="radio" value="N/A" v-model="item.result" />
-                N/A
-              </label>
-            </div>
-
-            <input v-model="item.note" placeholder="Notes or corrective action" />
-          </article>
-        </section>
+        <section id="checklist" class="checklist"></section>
 
         <label style="margin-top: 20px;">
           General Remarks
-          <textarea v-model="form.remarks" rows="4" placeholder="Overall toolbox talk notes, hazards, attendees, or follow-up actions"></textarea>
+          <textarea id="remarks" rows="4" placeholder="Overall toolbox talk notes, hazards, attendees, or follow-up actions"></textarea>
         </label>
 
         <div class="actions">
-          <button class="secondary" @click="saveChecklist">Save</button>
-          <button class="danger" @click="clearChecklist">Clear</button>
-          <button class="primary" @click="printChecklist">Print</button>
+          <button class="secondary" onclick="saveChecklist()">Save</button>
+          <button class="danger" onclick="clearChecklist()">Clear</button>
+          <button class="primary" onclick="window.print()">Print</button>
         </div>
 
-        <div class="notice" v-if="message">
-          {{ message }}
-        </div>
+        <div id="message" class="notice"></div>
       </main>
     </div>
   </div>
 
   <script>
-    const { createApp } = Vue;
+    const checklist = [
+      { id: 1, category: "PPE", title: "Hard hats, safety boots, gloves, and high-visibility vests are worn.", result: "", note: "" },
+      { id: 2, category: "PPE", title: "Eye, hearing, respiratory, or fall protection is available where required.", result: "", note: "" },
+      { id: 3, category: "Work Area", title: "Access routes, walkways, stairs, and ladders are clear and safe.", result: "", note: "" },
+      { id: 4, category: "Work Area", title: "Barricades, warning signs, and edge protection are properly installed.", result: "", note: "" },
+      { id: 5, category: "Tools", title: "Hand tools and power tools are inspected and in good condition.", result: "", note: "" },
+      { id: 6, category: "Electrical Safety", title: "Electrical cords, plugs, and temporary power connections are safe.", result: "", note: "" },
+      { id: 7, category: "Equipment", title: "Machinery and equipment pre-start checks are completed.", result: "", note: "" },
+      { id: 8, category: "Equipment", title: "Spotters and exclusion zones are assigned for moving equipment.", result: "", note: "" },
+      { id: 9, category: "Housekeeping", title: "Materials are stacked safely and waste is removed from the work area.", result: "", note: "" },
+      { id: 10, category: "Emergency", title: "First aid kit, fire extinguishers, and emergency contacts are available.", result: "", note: "" },
+      { id: 11, category: "Communication", title: "Daily hazards, permits, and work method statements are discussed.", result: "", note: "" },
+      { id: 12, category: "Environment", title: "Dust, noise, spills, weather, and environmental risks are controlled.", result: "", note: "" }
+    ];
 
-    createApp({
-      data() {
-        return {
-          message: "",
-          form: {
-            project: "",
-            site: "",
-            supervisor: "",
-            crew: "",
-            date: new Date().toISOString().slice(0, 10),
-            shift: "Morning",
-            remarks: ""
-          },
-          checklist: [
-            { id: 1, category: "PPE", title: "Hard hats, safety boots, gloves, and high-visibility vests are worn.", result: "", note: "" },
-            { id: 2, category: "PPE", title: "Eye, hearing, respiratory, or fall protection is available where required.", result: "", note: "" },
-            { id: 3, category: "Work Area", title: "Access routes, walkways, stairs, and ladders are clear and safe.", result: "", note: "" },
-            { id: 4, category: "Work Area", title: "Barricades, warning signs, and edge protection are properly installed.", result: "", note: "" },
-            { id: 5, category: "Tools", title: "Hand tools and power tools are inspected and in good condition.", result: "", note: "" },
-            { id: 6, category: "Electrical Safety", title: "Electrical cords, plugs, and temporary power connections are safe.", result: "", note: "" },
-            { id: 7, category: "Equipment", title: "Machinery and equipment pre-start checks are completed.", result: "", note: "" },
-            { id: 8, category: "Equipment", title: "Spotters and exclusion zones are assigned for moving equipment.", result: "", note: "" },
-            { id: 9, category: "Housekeeping", title: "Materials are stacked safely and waste is removed from the work area.", result: "", note: "" },
-            { id: 10, category: "Emergency", title: "First aid kit, fire extinguishers, and emergency contacts are available.", result: "", note: "" },
-            { id: 11, category: "Communication", title: "Daily hazards, permits, and work method statements are discussed.", result: "", note: "" },
-            { id: 12, category: "Environment", title: "Dust, noise, spills, weather, and environmental risks are controlled.", result: "", note: "" }
-          ]
-        };
-      },
+    document.getElementById("date").value = new Date().toISOString().slice(0, 10);
 
-      computed: {
-        completedCount() {
-          return this.checklist.filter(item => item.result).length;
+    function renderChecklist() {
+      const checklistContainer = document.getElementById("checklist");
+      checklistContainer.innerHTML = "";
+
+      checklist.forEach((item, index) => {
+        const row = document.createElement("article");
+        row.className = "item";
+
+        row.innerHTML = `
+          <div class="item-title">
+            <strong>${item.title}</strong>
+            <span>${item.category}</span>
+          </div>
+
+          <div class="result">
+            <button class="${item.result === "Pass" ? "active" : ""}" onclick="setResult(${index}, 'Pass')">Pass</button>
+            <button class="${item.result === "Fail" ? "active" : ""}" onclick="setResult(${index}, 'Fail')">Fail</button>
+            <button class="${item.result === "N/A" ? "active" : ""}" onclick="setResult(${index}, 'N/A')">N/A</button>
+          </div>
+
+          <input value="${item.note}" placeholder="Notes or corrective action" oninput="setNote(${index}, this.value)" />
+        `;
+
+        checklistContainer.appendChild(row);
+      });
+
+      updateSummary();
+    }
+
+    function setResult(index, result) {
+      checklist[index].result = result;
+      renderChecklist();
+    }
+
+    function setNote(index, note) {
+      checklist[index].note = note;
+    }
+
+    function updateSummary() {
+      const completed = checklist.filter(item => item.result).length;
+      const pass = checklist.filter(item => item.result === "Pass").length;
+      const fail = checklist.filter(item => item.result === "Fail").length;
+      const na = checklist.filter(item => item.result === "N/A").length;
+      const pending = checklist.length - completed;
+
+      document.getElementById("completedCount").textContent = completed;
+      document.getElementById("totalCount").textContent = checklist.length;
+      document.getElementById("passCount").textContent = pass;
+      document.getElementById("failCount").textContent = fail;
+      document.getElementById("naCount").textContent = na;
+      document.getElementById("pendingCount").textContent = pending;
+    }
+
+    function markAllPass() {
+      checklist.forEach(item => {
+        item.result = "Pass";
+      });
+
+      renderChecklist();
+      showMessage("All checklist items marked as Pass.");
+    }
+
+    function saveChecklist() {
+      const data = {
+        form: {
+          project: document.getElementById("project").value,
+          site: document.getElementById("site").value,
+          supervisor: document.getElementById("supervisor").value,
+          crew: document.getElementById("crew").value,
+          date: document.getElementById("date").value,
+          shift: document.getElementById("shift").value,
+          remarks: document.getElementById("remarks").value
         },
-        passCount() {
-          return this.checklist.filter(item => item.result === "Pass").length;
-        },
-        failCount() {
-          return this.checklist.filter(item => item.result === "Fail").length;
-        },
-        naCount() {
-          return this.checklist.filter(item => item.result === "N/A").length;
-        },
-        pendingCount() {
-          return this.checklist.length - this.completedCount;
-        }
-      },
+        checklist: checklist
+      };
 
-      mounted() {
-        const saved = localStorage.getItem("toolboxChecklist");
-        if (saved) {
-          const data = JSON.parse(saved);
-          this.form = data.form;
-          this.checklist = data.checklist;
-        }
-      },
+      localStorage.setItem("toolboxChecklist", JSON.stringify(data));
+      showMessage("Checklist saved in this browser.");
+    }
 
-      methods: {
-        saveChecklist() {
-          localStorage.setItem("toolboxChecklist", JSON.stringify({
-            form: this.form,
-            checklist: this.checklist
-          }));
+    function loadChecklist() {
+      const saved = localStorage.getItem("toolboxChecklist");
 
-          this.message = "Checklist saved in this browser.";
-        },
-
-        clearChecklist() {
-          if (!confirm("Clear the checklist?")) return;
-
-          this.form = {
-            project: "",
-            site: "",
-            supervisor: "",
-            crew: "",
-            date: new Date().toISOString().slice(0, 10),
-            shift: "Morning",
-            remarks: ""
-          };
-
-          this.checklist.forEach(item => {
-            item.result = "";
-            item.note = "";
-          });
-
-          localStorage.removeItem("toolboxChecklist");
-          this.message = "Checklist cleared.";
-        },
-
-        markAllPass() {
-          this.checklist.forEach(item => {
-            item.result = "Pass";
-          });
-
-          this.message = "All checklist items marked as Pass.";
-        },
-
-        printChecklist() {
-          window.print();
-        }
+      if (!saved) {
+        renderChecklist();
+        return;
       }
-    }).mount("#app");
+
+      const data = JSON.parse(saved);
+
+      document.getElementById("project").value = data.form.project || "";
+      document.getElementById("site").value = data.form.site || "";
+      document.getElementById("supervisor").value = data.form.supervisor || "";
+      document.getElementById("crew").value = data.form.crew || "";
+      document.getElementById("date").value = data.form.date || new Date().toISOString().slice(0, 10);
+      document.getElementById("shift").value = data.form.shift || "Morning";
+      document.getElementById("remarks").value = data.form.remarks || "";
+
+      if (data.checklist) {
+        data.checklist.forEach((savedItem, index) => {
+          if (checklist[index]) {
+            checklist[index].result = savedItem.result || "";
+            checklist[index].note = savedItem.note || "";
+          }
+        });
+      }
+
+      renderChecklist();
+    }
+
+    function clearChecklist() {
+      if (!confirm("Clear the checklist?")) return;
+
+      document.getElementById("project").value = "";
+      document.getElementById("site").value = "";
+      document.getElementById("supervisor").value = "";
+      document.getElementById("crew").value = "";
+      document.getElementById("date").value = new Date().toISOString().slice(0, 10);
+      document.getElementById("shift").value = "Morning";
+      document.getElementById("remarks").value = "";
+
+      checklist.forEach(item => {
+        item.result = "";
+        item.note = "";
+      });
+
+      localStorage.removeItem("toolboxChecklist");
+      renderChecklist();
+      showMessage("Checklist cleared.");
+    }
+
+    function showMessage(text) {
+      const message = document.getElementById("message");
+      message.textContent = text;
+      message.style.display = "block";
+    }
+
+    loadChecklist();
   </script>
 </body>
 </html>
