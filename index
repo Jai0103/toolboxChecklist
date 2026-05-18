@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Construction Toolbox Checklist</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef1f5;
+      color: #1f2933;
+    }
+
+    [v-cloak] {
+      display: none;
+    }
+
+    .app {
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      border: 1px solid #d8dee8;
+      border-radius: 8px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    header {
+      background: #17202a;
+      color: #ffffff;
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    header p {
+      margin: 6px 0 0;
+      color: #cbd5e1;
+    }
+
+    .status {
+      background: #d98e18;
+      color: #111827;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .content {
+      padding: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #374151;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid #cfd7e3;
+      border-radius: 6px;
+      padding: 11px 12px;
+      font: inherit;
+      background: #ffffff;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border: 1px solid #d8dee8;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 22px;
+    }
+
+    .summary div {
+      padding: 16px;
+      background: #f8fafc;
+      border-right: 1px solid #d8dee8;
+    }
+
+    .summary div:last-child {
+      border-right: 0;
+    }
+
+    .summary strong {
+      display: block;
+      font-size: 28px;
+    }
+
+    .summary span {
+      color: #64748b;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .toolbar h2 {
+      margin: 0;
+      font-size: 21px;
+    }
+
+    .checklist {
+      border-top: 1px solid #d8dee8;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 280px minmax(220px, 1fr);
+      gap: 14px;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #d8dee8;
+    }
+
+    .item-title strong,
+    .item-title span {
+      display: block;
+    }
+
+    .item-title span {
+      margin-top: 4px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .result {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid #cfd7e3;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .result label {
+      display: block;
+      padding: 10px 8px;
+      text-align: center;
+      background: #f8fafc;
+      border-right: 1px solid #cfd7e3;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .result label:last-child {
+      border-right: 0;
+    }
+
+    .result label.active {
+      background: #126a5b;
+      color: #ffffff;
+    }
+
+    .result input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #126a5b;
+      color: #ffffff;
+    }
+
+    .primary:hover {
+      background: #0b4f45;
+    }
+
+    .secondary {
+      background: #e5eaf1;
+      color: #1f2933;
+    }
+
+    .danger {
+      background: #b83232;
+      color: #ffffff;
+    }
+
+    .notice {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: #dcf5ea;
+      color: #166344;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 900px) {
+      header,
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .form-grid,
+      .item {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app" v-cloak>
+    <div class="container">
+      <header>
+        <div>
+          <h1>Construction Toolbox Checklist</h1>
+          <p>Daily site safety inspection interface</p>
+        </div>
+        <div class="status">
+          {{ completedCount }} / {{ checklist.length }} checked
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="form-grid">
+          <label>
+            Project Name
+            <input v-model="form.project" placeholder="Example: Tower A Construction" />
+          </label>
+
+          <label>
+            Site / Location
+            <input v-model="form.site" placeholder="Example: Level 5, Block B" />
+          </label>
+
+          <label>
+            Supervisor
+            <input v-model="form.supervisor" placeholder="Supervisor name" />
+          </label>
+
+          <label>
+            Crew / Contractor
+            <input v-model="form.crew" placeholder="Crew or contractor name" />
+          </label>
+
+          <label>
+            Date
+            <input type="date" v-model="form.date" />
+          </label>
+
+          <label>
+            Shift
+            <select v-model="form.shift">
+              <option>Morning</option>
+              <option>Afternoon</option>
+              <option>Night</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="summary">
+          <div>
+            <strong>{{ passCount }}</strong>
+            <span>Pass</span>
+          </div>
+          <div>
+            <strong>{{ failCount }}</strong>
+            <span>Fail</span>
+          </div>
+          <div>
+            <strong>{{ naCount }}</strong>
+            <span>N/A</span>
+          </div>
+          <div>
+            <strong>{{ pendingCount }}</strong>
+            <span>Pending</span>
+          </div>
+        </section>
+
+        <section class="toolbar">
+          <h2>Checklist Items</h2>
+          <button class="secondary" @click="markAllPass">Mark All Pass</button>
+        </section>
+
+        <section class="checklist">
+          <article class="item" v-for="item in checklist" :key="item.id">
+            <div class="item-title">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.category }}</span>
+            </div>
+
+            <div class="result">
+              <label :class="{ active: item.result === 'Pass' }">
+                <input type="radio" value="Pass" v-model="item.result" />
+                Pass
+              </label>
+
+              <label :class="{ active: item.result === 'Fail' }">
+                <input type="radio" value="Fail" v-model="item.result" />
+                Fail
+              </label>
+
+              <label :class="{ active: item.result === 'N/A' }">
+                <input type="radio" value="N/A" v-model="item.result" />
+                N/A
+              </label>
+            </div>
+
+            <input v-model="item.note" placeholder="Notes or corrective action" />
+          </article>
+        </section>
+
+        <label style="margin-top: 20px;">
+          General Remarks
+          <textarea v-model="form.remarks" rows="4" placeholder="Overall toolbox talk notes, hazards, attendees, or follow-up actions"></textarea>
+        </label>
+
+        <div class="actions">
+          <button class="secondary" @click="saveChecklist">Save</button>
+          <button class="danger" @click="clearChecklist">Clear</button>
+          <button class="primary" @click="printChecklist">Print</button>
+        </div>
+
+        <div class="notice" v-if="message">
+          {{ message }}
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          message: "",
+          form: {
+            project: "",
+            site: "",
+            supervisor: "",
+            crew: "",
+            date: new Date().toISOString().slice(0, 10),
+            shift: "Morning",
+            remarks: ""
+          },
+          checklist: [
+            { id: 1, category: "PPE", title: "Hard hats, safety boots, gloves, and high-visibility vests are worn.", result: "", note: "" },
+            { id: 2, category: "PPE", title: "Eye, hearing, respiratory, or fall protection is available where required.", result: "", note: "" },
+            { id: 3, category: "Work Area", title: "Access routes, walkways, stairs, and ladders are clear and safe.", result: "", note: "" },
+            { id: 4, category: "Work Area", title: "Barricades, warning signs, and edge protection are properly installed.", result: "", note: "" },
+            { id: 5, category: "Tools", title: "Hand tools and power tools are inspected and in good condition.", result: "", note: "" },
+            { id: 6, category: "Electrical Safety", title: "Electrical cords, plugs, and temporary power connections are safe.", result: "", note: "" },
+            { id: 7, category: "Equipment", title: "Machinery and equipment pre-start checks are completed.", result: "", note: "" },
+            { id: 8, category: "Equipment", title: "Spotters and exclusion zones are assigned for moving equipment.", result: "", note: "" },
+            { id: 9, category: "Housekeeping", title: "Materials are stacked safely and waste is removed from the work area.", result: "", note: "" },
+            { id: 10, category: "Emergency", title: "First aid kit, fire extinguishers, and emergency contacts are available.", result: "", note: "" },
+            { id: 11, category: "Communication", title: "Daily hazards, permits, and work method statements are discussed.", result: "", note: "" },
+            { id: 12, category: "Environment", title: "Dust, noise, spills, weather, and environmental risks are controlled.", result: "", note: "" }
+          ]
+        };
+      },
+
+      computed: {
+        completedCount() {
+          return this.checklist.filter(item => item.result).length;
+        },
+        passCount() {
+          return this.checklist.filter(item => item.result === "Pass").length;
+        },
+        failCount() {
+          return this.checklist.filter(item => item.result === "Fail").length;
+        },
+        naCount() {
+          return this.checklist.filter(item => item.result === "N/A").length;
+        },
+        pendingCount() {
+          return this.checklist.length - this.completedCount;
+        }
+      },
+
+      mounted() {
+        const saved = localStorage.getItem("toolboxChecklist");
+        if (saved) {
+          const data = JSON.parse(saved);
+          this.form = data.form;
+          this.checklist = data.checklist;
+        }
+      },
+
+      methods: {
+        saveChecklist() {
+          localStorage.setItem("toolboxChecklist", JSON.stringify({
+            form: this.form,
+            checklist: this.checklist
+          }));
+
+          this.message = "Checklist saved in this browser.";
+        },
+
+        clearChecklist() {
+          if (!confirm("Clear the checklist?")) return;
+
+          this.form = {
+            project: "",
+            site: "",
+            supervisor: "",
+            crew: "",
+            date: new Date().toISOString().slice(0, 10),
+            shift: "Morning",
+            remarks: ""
+          };
+
+          this.checklist.forEach(item => {
+            item.result = "";
+            item.note = "";
+          });
+
+          localStorage.removeItem("toolboxChecklist");
+          this.message = "Checklist cleared.";
+        },
+
+        markAllPass() {
+          this.checklist.forEach(item => {
+            item.result = "Pass";
+          });
+
+          this.message = "All checklist items marked as Pass.";
+        },
+
+        printChecklist() {
+          window.print();
+        }
+      }
+    }).mount("#app");
+  </script>
+</body>
+</html>
